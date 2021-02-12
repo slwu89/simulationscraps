@@ -1,6 +1,6 @@
 ---
 title: "Petri Notes"
-author: "Sean Wu"
+author: "Sean L. Wu"
 date: "2/11/2021"
 output:
   pdf_document: default
@@ -9,10 +9,43 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
 ```
 
-## Discrete Time Petri Nets (Molloy 1985)
+## Table of Contents
 
-Molloy's equation 4 is $$ \rho_{i} = \frac{P[E_{i}]}{P{E_[{i}]}\cup P[E_{0}]} $$ The probability $\rho_{i}$ are assigned by the designer **a priori**, the RHS of the expression is the definition, "the probability that the enabled transition $t_{i}$ fires at the next time step, given (conditioned on) the fact that no other transition fires." The conditioning gives the denominator. So it's made up of more fundamental building blocks that the conflict resolution rule in the Petri Net simulator has to deal with.
+  1. [Molloy 1985](#Molloy-1985): Discrete Time Stochastic Petri Nets
 
-In a set of mutually exclusive transitions $\{t_{i}\}$, that equation holds for all, so using the constraint all $0<\rho_{i}<1$, one can solve for $P[E_{0}]$ (he does not show this).
+## Discrete Time Petri Nets (Molloy 1985 [DOI:10.1109/TSE.1985.232230](https://doi.org/10.1109/TSE.1985.232230)) {#Molloy-1985}
+
+Molloy's equation 4 is $$ \rho_{i} = \frac{P[E_{i}]}{P[E_{i}]\cup P[E_{0}]} $$ The probability $\rho_{i}$ are assigned by the designer **a priori**, the RHS of the expression is the definition, "the probability that the enabled transition $t_{i}$ fires at the next time step, given (conditioned on) the fact that no other transition fires." The conditioning gives the denominator. So it's made up of more fundamental building blocks that the conflict resolution rule in the Petri Net simulator has to deal with.
+
+In a set of mutually exclusive transitions $\{t_{i}\}$, that equation holds for all, so using the constraint all $0<\rho_{i}<1$, one can solve for $P[E_{0}]$ (he does not show this). Let's consider the simple case with 2 mutually exclusive transitions. We get 3 equations, and 3 unknowns (the elementary unconditional probabilities). The denominators are sums here, he writes unions but because the events are mutually exclusive the intersection, coming from the [inclusion-exclusion principle](https://en.wikipedia.org/wiki/Inclusion%E2%80%93exclusion_principle#In_probability) is the zero set.
+
+$$
+P[E_{0}] + P[E_{1}] + P[E_{2}] = 1 \\
+\rho_{1} = \frac{P[E_{1}]}{P[E_{1}] + P[E_{0}]} \\
+\rho_{2} = \frac{P[E_{2}]}{P[E_{2}] + P[E_{0}]}
+$$
+This is a nonlinear system of equations so we have to solve it the hard way. Let's solve for $P[E_{1}]$ first. To do so, rewrite the third equation as $P[E_{2}] = \rho_{2}(1 - P[E_{1}])$, where we used the fact that $P[E_{2}]+P[E_{0}] = 1 - P[E_{1}]$.  Then, rewrite the second equation using $P[E_{1}]+P[E_{0}] = 1 - P[E_{2}]$, and then substitute in the definition of $P[E_{2}]$ in terms of only $\rho_{2}$ (known) and $P[E_{1}]$, so we're back to one equation and one unknown, and solve for $P[E_{1}] = \frac{\rho_{1} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. $P[E_{2}]$ is solved analogously to get $P[E_{2}] = \frac{\rho_{2} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. And finally $P[E_{0}] = 1 - P[E_{1}] - P[E_{0}]$.
+
+The case for ${t_{i}}$ sets larger than 2 follows generally. Molloy gives a formula for thee probability that a particular transition in a set fires to be:
+
+$$
+P[E_{i}] = \frac{\frac{\rho_{i}}{1-\rho_{i}}}{ 1 + \sum \frac{\rho_{j}}{1-\rho_{j}} }
+$$
+
+```{R}
+molloy <- function(rho,i){
+  (rho[i] / (1 - rho[i]))  / ( 1 + sum( rho / (1 - rho) ))
+}
+
+rho <- c(0.5,0.25)
+```
+
+We can check our solution works against his:
+
+```{R}
+fractions((rho[1] - prod(rho)) / (1 - prod(rho)))
+fractions(molloy(rho,1))
+```
