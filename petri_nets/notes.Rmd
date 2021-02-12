@@ -1,0 +1,18 @@
+---
+title: "Petri Notes"
+author: "Sean Wu"
+date: "2/11/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Discrete Time Petri Nets (Molloy 1985)
+
+Molloy's equation 4 is $$ \rho_{i} = \frac{P[E_{i}]}{P{E_[{i}]}\cup P[E_{0}]} $$ The probability $\rho_{i}$ are assigned by the designer **a priori**, the RHS of the expression is the definition, "the probability that the enabled transition $t_{i}$ fires at the next time step, given (conditioned on) the fact that no other transition fires." The conditioning gives the denominator. So it's made up of more fundamental building blocks that the conflict resolution rule in the Petri Net simulator has to deal with.
+
+In a set of mutually exclusive transitions $\{t_{i}\}$, that equation holds for all, so using the constraint all $0<\rho_{i}<1$, one can solve for $P[E_{0}]$ (he does not show this).
