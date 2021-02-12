@@ -3,8 +3,9 @@ title: "Petri Notes"
 author: "Sean L. Wu"
 date: "2/11/2021"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
