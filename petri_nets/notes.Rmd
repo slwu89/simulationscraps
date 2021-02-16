@@ -1,5 +1,5 @@
 ---
-title: "Petri Notes"
+title: "Stochastic Petri Nets and Discrete Event Simulation Notes"
 author: "Sean L. Wu"
 date: "2/11/2021"
 output:
@@ -16,10 +16,15 @@ library(MASS)
 ## Table of Contents
 
   1. [Molloy 1985](#Molloy-1985): Discrete Time Stochastic Petri Nets
+  2. [Glynn 1989](#Glynn-1989): A GSMP Formalism for Discrete Event Systems
 
 ## Discrete Time Petri Nets (Molloy 1985 [DOI:10.1109/TSE.1985.232230](https://doi.org/10.1109/TSE.1985.232230)) {#Molloy-1985}
 
-Molloy's equation 4 is $$ \rho_{i} = \frac{P[E_{i}]}{P[E_{i}]\cup P[E_{0}]} $$ The probability $\rho_{i}$ are assigned by the designer **a priori**, the RHS of the expression is the definition, "the probability that the enabled transition $t_{i}$ fires at the next time step, given (conditioned on) the fact that no other transition fires." The conditioning gives the denominator. So it's made up of more fundamental building blocks that the conflict resolution rule in the Petri Net simulator has to deal with.
+For a discrete time stochastic Petri net (DTSPN), on each time step, if no events are in conflict, then the probability of any combination of firings and non-firings (a binary vector) will simply be a product of $\rho_{i}$ and $1-\rho_{i}$. The probability $\rho_{i}$ are assigned by the designer *a priori*, and are "the probability that the enabled transition $t_{i}$ fires at the next time step, given (conditioned on) the fact that no other transition fires." This means the firing times are Geometrically distributed, if $\rho_{i}<1$.
+
+Molloy's equation 4 is: $$ \rho_{i} = \frac{P[E_{i}]}{P[E_{i}\cup E_{0}]} $$ 
+
+The conditioning gives the denominator. So it's made up of more fundamental building blocks that the conflict resolution rule in the Petri Net simulator has to deal with. That's what he calls "deconditioning".
 
 In a set of mutually exclusive transitions $\{t_{i}\}$, that equation holds for all, so using the constraint all $0<\rho_{i}<1$, one can solve for $P[E_{0}]$ (he does not show this). Let's consider the simple case with 2 mutually exclusive transitions. We get 3 equations, and 3 unknowns (the elementary unconditional probabilities). The denominators are sums here, he writes unions but because the events are mutually exclusive the intersection, coming from the [inclusion-exclusion principle](https://en.wikipedia.org/wiki/Inclusion%E2%80%93exclusion_principle#In_probability) is the zero set.
 
@@ -30,7 +35,7 @@ P[E_{0}] + P[E_{1}] + P[E_{2}] = 1 \\
 $$
 This is a nonlinear system of equations so we have to solve it the hard way. Let's solve for $P[E_{1}]$ first. To do so, rewrite the third equation as $P[E_{2}] = \rho_{2}(1 - P[E_{1}])$, where we used the fact that $P[E_{2}]+P[E_{0}] = 1 - P[E_{1}]$.  Then, rewrite the second equation using $P[E_{1}]+P[E_{0}] = 1 - P[E_{2}]$, and then substitute in the definition of $P[E_{2}]$ in terms of only $\rho_{2}$ (known) and $P[E_{1}]$, so we're back to one equation and one unknown, and solve for $P[E_{1}] = \frac{\rho_{1} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. $P[E_{2}]$ is solved analogously to get $P[E_{2}] = \frac{\rho_{2} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. And finally $P[E_{0}] = 1 - P[E_{1}] - P[E_{0}]$.
 
-The case for ${t_{i}}$ sets larger than 2 follows generally. Molloy gives a formula for thee probability that a particular transition in a set fires to be:
+The case for ${t_{i}}$ sets larger than 2 follows generally. The key is just realizing that due to mutual exclusivity, the denominators of the conditional probabilities $\rho_{i}$ can be changed so $P[E_{0}]$ does not appear in them, solve for all the $P[E_{i}]$ values, then use the sum to 1 constraint to get $P[E_{0}]$. Molloy gives a formula for the probability that a particular transition in a set fires to be:
 
 $$
 P[E_{i}] = \frac{\frac{\rho_{i}}{1-\rho_{i}}}{ 1 + \sum \frac{\rho_{j}}{1-\rho_{j}} }
@@ -50,3 +55,50 @@ We can check our solution works against his:
 fractions((rho[1] - prod(rho)) / (1 - prod(rho)))
 fractions(molloy(rho,1))
 ```
+
+In Julia it looks basically the same.
+
+```{julia}
+function molloy(rho,i)
+  (rho[i] / (1 - rho[i])) / (1 + sum(rho ./ (1 .- rho)))
+end;
+
+rho = [0.5,0.25];
+
+broadcast(x -> molloy(rho,x), [1,2])
+```
+
+If $\rho_{i}=1$ is allowed for some subset $T_{D}\subset T_{E}$ in the set of enabled, mutually exclusive (conflicting) transitions, the previous equations do not make sense. Molloy gives the only reasonable conflict resolution as saying that for $t_{i}\in T_{E}$ where $\rho_{i}<1$, their probability of firing $P[E_{i}]$ is zero. For $t_{i}\in T_{D}$:
+
+$$
+P[E_{i}] = \frac{1}{|T_{D}|}
+$$
+
+By making "chains" of $\rho_{i}=1$ transitions and places, one can implement deterministic firing time distributions into DTSPN.
+
+## A GSMP Formalism for Discrete Event Systems (Glynn 1989) [DOI:10.1109/5.21067](https://doi.org/10.1109/5.21067) {#Glynn-1989}
+
+2 definitions:
+
+  * CVDS: continuous variable dynamical system
+  * DEDS: discrete event dynamical system
+  
+### The CVDS/DEDS analogy
+
+An output process $s(t)$ for CVDS is defined as $s(t) = h(x(t))$ where $x(t)$ is some transformation of the internal state of the system. Nothing here yet corresponds to a map or differential giving system evolution.
+
+For a DEDS he lets $S(t)$ be the output process for a system with piecewise constant trajectories, such that if the DEDS is a queueing system it is:
+
+$$
+S(t) = \sum_{n=0}^{\infty} S_{n} I(\Lambda_{n} \leq t < \Lambda(n+1))
+$$
+
+Then, $\Delta_{n+1} = \Lambda(n+1) - \Lambda(n)$ is the time that the system dwells in the state attained by the n-th transition, and $S_{n}$ is the associated output value. The output process needs the existence of a stochastic process $X = (X_{n}:n\geq 0)$ describing the evolution of the internal state of the system. The "observables" are related by: $(S_{n},\Delta_{n}) = (h_{1}(X_{n}),h_{2}(X_{n}))$.
+
+The next thing is how to describe the evolution of the internal state for each system. For CVDS we can use a mapping, $x=f(x)$, which takes you from one spot in state space to another. Interestingly enough he notes that this representation is "noncausal", creating difficulties both mathematically and computationally. For that reasons, we usually use a (possibly time-dependent) differential relationship $x^{\prime}(t) = f(t,x(s):0\leq s \leq t)$. Then the model is "causally defined in terms of the infinitesimal characteristics of the system", which is a local specification. For classic differential equations, the considered dynamics are $x^{\prime}(t) = f(t,x(t))$.
+
+For DEDS the "noncausal" representation is $X = f(X,\eta)$, where $\eta$ is a sequence of i.i.d. random variables. The causal representation is $X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)$. For Markov processes, it becomes $X_{n+1} = f_{n+1}(X_{n},\eta_{n+1})$.
+
+### GSMP (Generalized Semi-Markov Processes)
+
+To discuss GSMP, Glynn uses the $X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)$ DEDS representation. $S is the countable set of states, $E is the countable set of events, $s\in S$ is a physical state a system may exist in, and $E(s)$ is the finite set of events that can trigger transitions out of $s$. For each $e\in E(s)$, a clock $c_{e}$ is associated which gives the amount of time elapsed since $c_{e}$ was last activated. Each clock's time elapses at a rate/speed $r_{se}$. The rates can be a function of state. Let $C(s)$ be the set of clock readings possible in $s\in S$.
