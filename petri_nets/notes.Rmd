@@ -35,7 +35,7 @@ P[E_{0}] + P[E_{1}] + P[E_{2}] = 1 \\
 $$
 This is a nonlinear system of equations so we have to solve it the hard way. Let's solve for $P[E_{1}]$ first. To do so, rewrite the third equation as $P[E_{2}] = \rho_{2}(1 - P[E_{1}])$, where we used the fact that $P[E_{2}]+P[E_{0}] = 1 - P[E_{1}]$.  Then, rewrite the second equation using $P[E_{1}]+P[E_{0}] = 1 - P[E_{2}]$, and then substitute in the definition of $P[E_{2}]$ in terms of only $\rho_{2}$ (known) and $P[E_{1}]$, so we're back to one equation and one unknown, and solve for $P[E_{1}] = \frac{\rho_{1} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. $P[E_{2}]$ is solved analogously to get $P[E_{2}] = \frac{\rho_{2} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}$. And finally $P[E_{0}] = 1 - P[E_{1}] - P[E_{0}]$.
 
-The case for ${t_{i}}$ sets larger than 2 follows generally. The key is just realizing that due to mutual exclusivity, the denominators of the conditional probabilities $\rho_{i}$ can be changed so $P[E_{0}]$ does not appear in them, solve for all the $P[E_{i}]$ values, then use the sum to 1 constraint to get $P[E_{0}]$. Molloy gives a formula for the probability that a particular transition in a set fires to be:
+The case for $\{t_{i}\}$ sets larger than 2 follows generally. The key is just realizing that due to mutual exclusivity, the denominators of the conditional probabilities $\rho_{i}$ can be changed so $P[E_{0}]$ does not appear in them, solve for all the $P[E_{i}]$ values, then use the sum to 1 constraint to get $P[E_{0}]$. Molloy gives a formula for the probability that a particular transition in a set fires to be:
 
 $$
 P[E_{i}] = \frac{\frac{\rho_{i}}{1-\rho_{i}}}{ 1 + \sum \frac{\rho_{j}}{1-\rho_{j}} }
@@ -101,4 +101,34 @@ For DEDS the "noncausal" representation is $X = f(X,\eta)$, where $\eta$ is a se
 
 ### GSMP (Generalized Semi-Markov Processes)
 
-To discuss GSMP, Glynn uses the $X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)$ DEDS representation. $S is the countable set of states, $E is the countable set of events, $s\in S$ is a physical state a system may exist in, and $E(s)$ is the finite set of events that can trigger transitions out of $s$. For each $e\in E(s)$, a clock $c_{e}$ is associated which gives the amount of time elapsed since $c_{e}$ was last activated. Each clock's time elapses at a rate/speed $r_{se}$. The rates can be a function of state. Let $C(s)$ be the set of clock readings possible in $s\in S$.
+To discuss GSMP, Glynn uses the $X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)$ DEDS representation. $S$ is the countable set of states, $E$ is the countable set of events, $s\in S$ is a physical state a system may exist in, and $E(s)$ is the finite set of events that can trigger transitions out of $s$. For each $e\in E(s)$, a clock $c_{e}$ is associated which gives the amount of time elapsed since $c_{e}$ was last activated. Each clock's time elapses at a rate/speed $r_{se}$. The rates can be a function of state. Let $C(s)$ be the set of clock readings possible in $s\in S$.
+
+#### Algorithm for GSMP
+
+To describe a general algorithm to simulate from a GSMP, buckle up, we're gonna need more ~~guns~~ notation. A lot more notation. Good thing silicon is cheap. A GSMP is a GSSMC (General State Space Markov Chain) on $\Sigma$, the state space where the internal state sequence $X$ takes values in $\Sigma = \bigcup_{s\in S} {s}\times[0,\infty)\times C(s)$. Therefore, the moment the system arrives in a state at the n-th transition, occurring at time $\Lambda(n)$, the state is given by $X_{n}=(S_{n},\Delta_{n},C_{n})$. The first element of the state is the physical state, the second is the dwell time, and the third is the vector of (valid) clock readings. Because the clocks accrue time deterministically within a physical state, the clock vector upon entry to the state is sufficient to describe the system. The dwell time still needs to be accounted for in the state as the joint probability of a jump and destination state change as it accrues, meaning that the probability distribution any simulation algorithm should sample from is incomplete without incorporating it.
+
+Let $\overrightarrow{X}_{n}=(X_{0},...,X_{n})$ be a random variable and $\overrightarrow{x}_{n}=(x_{0},...,x_{n})$ be a realization (sampled trajectory) from it, where $x_{i}\in\Sigma$.
+
+For each $e\in E(s)$:
+
+  * CDF $F(t;\overrightarrow{x}_{n},e)$ over values $0\leq t$ giving the probability $e$ fires at time $t$, if it were the first to fire. 
+  * The survival is $\overline{F}(t;\overrightarrow{x}_{n},e) = 1 - F(t;\overrightarrow{x}_{n},e)$. 
+  * $G(t+dt; \overrightarrow{x}_{n},e) = F(t+dt;\overrightarrow{x}_{n},e) \prod\limits_{e^\prime\in E(S_{n});e^\prime \neq e} \overline{F}(t;\overrightarrow{x}_{n},e)$ is the joint probability that $e$ fires at time $t+dt$, so that $\Delta_{n+1}\in dt$, such that $e^{*}_{n+1} = e$ (where asterisk means it attains the minimum, is the first to fire). 
+  
+Glynn calls $F$ a residual life distribution. I suspect that means it's defined as the distribution over time remaining to fire, if "time" is a normalized, unit rate quantity, putting everything on an even footing. Otherwise the division we will see later on by the current clock speed doesn't make sense. So when it's sampled its asking the question "if this event has accured this much unit time so far, how much unit time is left before it fires?" It should be equivalent to integrated hazard.
+
+In his notation $F_{a}(x;\overrightarrow{x}_{n},e) = F(ax;\overrightarrow{x}_{n},e), a\geq 0$ to make the probabilities relative to the entry point $\Lambda(n)$ but I think it's more clear to Just Deal With it (the extra notation).
+
+The simulation algorithm upon arriving in a state $\overrightarrow{X}_{n}$ to sample $X_{n+1}$ is:
+
+  1. For each enabled event $e\in E(S_{n})$, sample a random variate $Y_{e,n} \sim F(\cdot;\overrightarrow{X}_{n},e)$.
+  2. Set $\Delta_{n+1} = \min\{Y_{e,n}/r_{S_{n},e}:e\in E(S_{n})\}$ and $e^{*}_{n+1}$ is the unique event which achieves the minimum for $\Delta_{n+1}$.
+  3. Sample the new physical state $S_{n+1}$ from $p(\cdot; \overrightarrow{X},e^{*}_{n+1})$.
+  4. Set:
+      1. $C_{n+1,e}=-1$, for $e\not\in E(S_{n+1})$ (newly disabled clocks are set to some null value)
+      2. $C_{n+1,e}=0$, for $e\in N(S_{n+1};S_{n},e^{*}_{n+1})$ (newly enabled clocks are set to zero)
+      3. $C_{n+1,e} = C_{n+e} + \Delta_{n+1} r_{S_{n},e}$, for $e\in 0(S_{n+1};S_{n},e^{*}_{n+1})$ (old clocks that still run are updated with how much they ticked in the last state dwell)
+    
+Such an algorithm can sample from time-inhomogeneous generalized semi-Markov processes. It's inhomogeneous because the residual life distributions $F$ and transition $p$ can depend on the entire history of $X$. Also, it probably draws far more random numbers than it needs to. Anderson would later (18 years later, to be specific) cut down the number to just 1 per event (after initialization), and also demystified the "residual life" distributions via [random time changes](http://bactra.org/notebooks/random-time-changes.html). Thank god.
+
+###

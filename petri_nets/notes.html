@@ -199,7 +199,7 @@ summary {
 <h2>Table of Contents</h2>
 <ol style="list-style-type: decimal">
 <li><a href="#Molloy-1985">Molloy 1985</a>: Discrete Time Stochastic Petri Nets</li>
-<li><a href="#Glynn-1985">Glynn 1989</a>: A GSMP Formalism for Discrete Event Systems</li>
+<li><a href="#Glynn-1989">Glynn 1989</a>: A GSMP Formalism for Discrete Event Systems</li>
 </ol>
 </div>
 <div id="Molloy-1985" class="section level2">
@@ -213,7 +213,7 @@ P[E_{0}] + P[E_{1}] + P[E_{2}] = 1 \\
 \rho_{1} = \frac{P[E_{1}]}{P[E_{1}] + P[E_{0}]} \\
 \rho_{2} = \frac{P[E_{2}]}{P[E_{2}] + P[E_{0}]}
 \]</span> This is a nonlinear system of equations so we have to solve it the hard way. Let’s solve for <span class="math inline">\(P[E_{1}]\)</span> first. To do so, rewrite the third equation as <span class="math inline">\(P[E_{2}] = \rho_{2}(1 - P[E_{1}])\)</span>, where we used the fact that <span class="math inline">\(P[E_{2}]+P[E_{0}] = 1 - P[E_{1}]\)</span>. Then, rewrite the second equation using <span class="math inline">\(P[E_{1}]+P[E_{0}] = 1 - P[E_{2}]\)</span>, and then substitute in the definition of <span class="math inline">\(P[E_{2}]\)</span> in terms of only <span class="math inline">\(\rho_{2}\)</span> (known) and <span class="math inline">\(P[E_{1}]\)</span>, so we’re back to one equation and one unknown, and solve for <span class="math inline">\(P[E_{1}] = \frac{\rho_{1} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}\)</span>. <span class="math inline">\(P[E_{2}]\)</span> is solved analogously to get <span class="math inline">\(P[E_{2}] = \frac{\rho_{2} - \rho_{1}\rho_{2}}{1-\rho_{1}\rho_{2}}\)</span>. And finally <span class="math inline">\(P[E_{0}] = 1 - P[E_{1}] - P[E_{0}]\)</span>.</p>
-<p>The case for <span class="math inline">\({t_{i}}\)</span> sets larger than 2 follows generally. The key is just realizing that due to mutual exclusivity, the denominators of the conditional probabilities <span class="math inline">\(\rho_{i}\)</span> can be changed so <span class="math inline">\(P[E_{0}]\)</span> does not appear in them, solve for all the <span class="math inline">\(P[E_{i}]\)</span> values, then use the sum to 1 constraint to get <span class="math inline">\(P[E_{0}]\)</span>. Molloy gives a formula for the probability that a particular transition in a set fires to be:</p>
+<p>The case for <span class="math inline">\(\{t_{i}\}\)</span> sets larger than 2 follows generally. The key is just realizing that due to mutual exclusivity, the denominators of the conditional probabilities <span class="math inline">\(\rho_{i}\)</span> can be changed so <span class="math inline">\(P[E_{0}]\)</span> does not appear in them, solve for all the <span class="math inline">\(P[E_{i}]\)</span> values, then use the sum to 1 constraint to get <span class="math inline">\(P[E_{0}]\)</span>. Molloy gives a formula for the probability that a particular transition in a set fires to be:</p>
 <p><span class="math display">\[
 P[E_{i}] = \frac{\frac{\rho_{i}}{1-\rho_{i}}}{ 1 + \sum \frac{\rho_{j}}{1-\rho_{j}} }
 \]</span></p>
@@ -245,7 +245,7 @@ P[E_{i}] = \frac{1}{|T_{D}|}
 <p>By making “chains” of <span class="math inline">\(\rho_{i}=1\)</span> transitions and places, one can implement deterministic firing time distributions into DTSPN.</p>
 </div>
 <div id="Glynn-1989" class="section level2">
-<h2>A GSMP Formalism for Discrete Event Systems (Glynn 1985) <a href="https://doi.org/10.1109/5.21067">DOI:10.1109/5.21067</a></h2>
+<h2>A GSMP Formalism for Discrete Event Systems (Glynn 1989) <a href="https://doi.org/10.1109/5.21067">DOI:10.1109/5.21067</a></h2>
 <p>2 definitions:</p>
 <ul>
 <li>CVDS: continuous variable dynamical system</li>
@@ -258,7 +258,42 @@ P[E_{i}] = \frac{1}{|T_{D}|}
 <p><span class="math display">\[
 S(t) = \sum_{n=0}^{\infty} S_{n} I(\Lambda_{n} \leq t &lt; \Lambda(n+1))
 \]</span></p>
-<p>Then, <span class="math inline">\(\Delta_{n+1} = \Lambda(n+1) - \Lambda(n)\)</span> is the time that the system dwells in the state attained by the n-th transition, and <span class="math inline">\(S_{n}\)</span> is the associated output value. The output process needs the existence of a stochastic process <span class="math inline">\(X = (X_{n}:n\geq 0)\)</span> describing the evolution of the internal state of the system. The “observables” are related by: <span class="math inline">\((S_{n},\Delta_{n}) = (h_{1}(X_{n}),h_{2}(X_{n}))\)</span></p>
+<p>Then, <span class="math inline">\(\Delta_{n+1} = \Lambda(n+1) - \Lambda(n)\)</span> is the time that the system dwells in the state attained by the n-th transition, and <span class="math inline">\(S_{n}\)</span> is the associated output value. The output process needs the existence of a stochastic process <span class="math inline">\(X = (X_{n}:n\geq 0)\)</span> describing the evolution of the internal state of the system. The “observables” are related by: <span class="math inline">\((S_{n},\Delta_{n}) = (h_{1}(X_{n}),h_{2}(X_{n}))\)</span>.</p>
+<p>The next thing is how to describe the evolution of the internal state for each system. For CVDS we can use a mapping, <span class="math inline">\(x=f(x)\)</span>, which takes you from one spot in state space to another. Interestingly enough he notes that this representation is “noncausal”, creating difficulties both mathematically and computationally. For that reasons, we usually use a (possibly time-dependent) differential relationship <span class="math inline">\(x^{\prime}(t) = f(t,x(s):0\leq s \leq t)\)</span>. Then the model is “causally defined in terms of the infinitesimal characteristics of the system”, which is a local specification. For classic differential equations, the considered dynamics are <span class="math inline">\(x^{\prime}(t) = f(t,x(t))\)</span>.</p>
+<p>For DEDS the “noncausal” representation is <span class="math inline">\(X = f(X,\eta)\)</span>, where <span class="math inline">\(\eta\)</span> is a sequence of i.i.d. random variables. The causal representation is <span class="math inline">\(X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)\)</span>. For Markov processes, it becomes <span class="math inline">\(X_{n+1} = f_{n+1}(X_{n},\eta_{n+1})\)</span>.</p>
+</div>
+<div id="gsmp-generalized-semi-markov-processes" class="section level3">
+<h3>GSMP (Generalized Semi-Markov Processes)</h3>
+<p>To discuss GSMP, Glynn uses the <span class="math inline">\(X_{n+1} = f_{n+1}(\eta_{n+1},X_{k}:0\leq k \leq n)\)</span> DEDS representation. <span class="math inline">\(S\)</span> is the countable set of states, <span class="math inline">\(E\)</span> is the countable set of events, <span class="math inline">\(s\in S\)</span> is a physical state a system may exist in, and <span class="math inline">\(E(s)\)</span> is the finite set of events that can trigger transitions out of <span class="math inline">\(s\)</span>. For each <span class="math inline">\(e\in E(s)\)</span>, a clock <span class="math inline">\(c_{e}\)</span> is associated which gives the amount of time elapsed since <span class="math inline">\(c_{e}\)</span> was last activated. Each clock’s time elapses at a rate/speed <span class="math inline">\(r_{se}\)</span>. The rates can be a function of state. Let <span class="math inline">\(C(s)\)</span> be the set of clock readings possible in <span class="math inline">\(s\in S\)</span>.</p>
+<div id="algorithm-for-gsmp" class="section level4">
+<h4>Algorithm for GSMP</h4>
+<p>To describe a general algorithm to simulate from a GSMP, buckle up, we’re gonna need more <del>guns</del> notation. A lot more notation. Good thing silicon is cheap. A GSMP is a GSSMC (General State Space Markov Chain) on <span class="math inline">\(\Sigma\)</span>, the state space where the internal state sequence <span class="math inline">\(X\)</span> takes values in <span class="math inline">\(\Sigma = \bigcup_{s\in S} {s}\times[0,\infty)\times C(s)\)</span>. Therefore, the moment the system arrives in a state at the n-th transition, occurring at time <span class="math inline">\(\Lambda(n)\)</span>, the state is given by <span class="math inline">\(X_{n}=(S_{n},\Delta_{n},C_{n})\)</span>. The first element of the state is the physical state, the second is the dwell time, and the third is the vector of (valid) clock readings. Because the clocks accrue time deterministically within a physical state, the clock vector upon entry to the state is sufficient to describe the system. The dwell time still needs to be accounted for in the state as the joint probability of a jump and destination state change as it accrues, meaning that the probability distribution any simulation algorithm should sample from is incomplete without incorporating it.</p>
+<p>Let <span class="math inline">\(\overrightarrow{X}_{n}=(X_{0},...,X_{n})\)</span> be a random variable and <span class="math inline">\(\overrightarrow{x}_{n}=(x_{0},...,x_{n})\)</span> be a realization (sampled trajectory) from it, where <span class="math inline">\(x_{i}\in\Sigma\)</span>.</p>
+<p>For each <span class="math inline">\(e\in E(s)\)</span>:</p>
+<ul>
+<li>CDF <span class="math inline">\(F(t;\overrightarrow{x}_{n},e)\)</span> over values <span class="math inline">\(0\leq t\)</span> giving the probability <span class="math inline">\(e\)</span> fires at time <span class="math inline">\(t\)</span>, if it were the first to fire.</li>
+<li>The survival is <span class="math inline">\(\overline{F}(t;\overrightarrow{x}_{n},e) = 1 - F(t;\overrightarrow{x}_{n},e)\)</span>.</li>
+<li><span class="math inline">\(G(t+dt; \overrightarrow{x}_{n},e) = F(t+dt;\overrightarrow{x}_{n},e) \prod\limits_{e^\prime\in E(S_{n});e^\prime \neq e} \overline{F}(t;\overrightarrow{x}_{n},e)\)</span> is the joint probability that <span class="math inline">\(e\)</span> fires at time <span class="math inline">\(t+dt\)</span>, so that <span class="math inline">\(\Delta_{n+1}\in dt\)</span>, such that <span class="math inline">\(e^{*}_{n+1} = e\)</span> (where asterisk means it attains the minimum, is the first to fire).</li>
+</ul>
+<p>Glynn calls <span class="math inline">\(F\)</span> a residual life distribution. I suspect that means it’s defined as the distribution over time remaining to fire, if “time” is a normalized, unit rate quantity, putting everything on an even footing. Otherwise the division we will see later on by the current clock speed doesn’t make sense. So when it’s sampled its asking the question “if this event has accured this much unit time so far, how much unit time is left before it fires?” It should be equivalent to integrated hazard.</p>
+<p>In his notation <span class="math inline">\(F_{a}(x;\overrightarrow{x}_{n},e) = F(ax;\overrightarrow{x}_{n},e), a\geq 0\)</span> to make the probabilities relative to the entry point <span class="math inline">\(\Lambda(n)\)</span> but I think it’s more clear to Just Deal With it (the extra notation).</p>
+<p>The simulation algorithm upon arriving in a state <span class="math inline">\(\overrightarrow{X}_{n}\)</span> to sample <span class="math inline">\(X_{n+1}\)</span> is:</p>
+<ol style="list-style-type: decimal">
+<li>For each enabled event <span class="math inline">\(e\in E(S_{n})\)</span>, sample a random variate <span class="math inline">\(Y_{e,n} \sim F(\cdot;\overrightarrow{X}_{n},e)\)</span>.</li>
+<li>Set <span class="math inline">\(\Delta_{n+1} = \min\{Y_{e,n}/r_{S_{n},e}:e\in E(S_{n})\}\)</span> and <span class="math inline">\(e^{*}_{n+1}\)</span> is the unique event which achieves the minimum for <span class="math inline">\(\Delta_{n+1}\)</span>.</li>
+<li>Sample the new physical state <span class="math inline">\(S_{n+1}\)</span> from <span class="math inline">\(p(\cdot; \overrightarrow{X},e^{*}_{n+1})\)</span>.</li>
+<li>Set:
+<ol style="list-style-type: decimal">
+<li><span class="math inline">\(C_{n+1,e}=-1\)</span>, for <span class="math inline">\(e\not\in E(S_{n+1})\)</span> (newly disabled clocks are set to some null value)</li>
+<li><span class="math inline">\(C_{n+1,e}=0\)</span>, for <span class="math inline">\(e\in N(S_{n+1};S_{n},e^{*}_{n+1})\)</span> (newly enabled clocks are set to zero)</li>
+<li><span class="math inline">\(C_{n+1,e} = C_{n+e} + \Delta_{n+1} r_{S_{n},e}\)</span>, for <span class="math inline">\(e\in 0(S_{n+1};S_{n},e^{*}_{n+1})\)</span> (old clocks that still run are updated with how much they ticked in the last state dwell)</li>
+</ol></li>
+</ol>
+<p>Such an algorithm can sample from time-inhomogeneous generalized semi-Markov processes. It’s inhomogeneous because the residual life distributions <span class="math inline">\(F\)</span> and transition <span class="math inline">\(p\)</span> can depend on the entire history of <span class="math inline">\(X\)</span>. Also, it probably draws far more random numbers than it needs to. Anderson would later (18 years later, to be specific) cut down the number to just 1 per event (after initialization), and also demystified the “residual life” distributions via <a href="http://bactra.org/notebooks/random-time-changes.html">random time changes</a>. Thank god.</p>
+</div>
+</div>
+<div id="section" class="section level3">
+<h3></h3>
 </div>
 </div>
 
