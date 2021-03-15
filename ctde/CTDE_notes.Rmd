@@ -113,7 +113,7 @@ For each $e\in E(s)$:
 
   * CDF $F(t;\overrightarrow{x}_{n},e)$ over values $0\leq t$ giving the probability $e$ fires at time $t$, if it were the first to fire. 
   * The survival is $\overline{F}(t;\overrightarrow{x}_{n},e) = 1 - F(t;\overrightarrow{x}_{n},e)$. 
-  * $G(t+dt; \overrightarrow{x}_{n},e) = F(t+dt;\overrightarrow{x}_{n},e) \prod\limits_{e^\prime\in E(S_{n});e^\prime \neq e} \overline{F}(t;\overrightarrow{x}_{n},e)$ is the joint probability that $e$ fires at time $t+dt$, so that $\Delta_{n+1}\in dt$, such that $e^{*}_{n+1} = e$ (where asterisk means it attains the minimum, is the first to fire). 
+  * $G(t+dt; \overrightarrow{x}_{n},e) = F(t+dt;\overrightarrow{x}_{n},e) \prod\limits_{e^\prime\in E(S_{n});e^\prime \neq e} \overline{F}(t;\overrightarrow{x}_{n},e^\prime)$: is the joint probability that $e$ fires at time $t+dt$, so that $\Delta_{n+1}\in dt$, such that $e^{*}_{n+1} = e$ (where asterisk means it attains the minimum, is the first to fire). 
   
 Glynn calls $F$ a residual life distribution. I suspect that means it's defined as the distribution over time remaining to fire, if "time" is a normalized, unit rate quantity, putting everything on an even footing. Otherwise the division we will see later on by the current clock speed doesn't make sense. So when it's sampled its asking the question "if this event has accured this much unit time so far, how much unit time is left before it fires?" It should be equivalent to integrated hazard.
 
